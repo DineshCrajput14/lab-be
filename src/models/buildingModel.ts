@@ -16,29 +16,36 @@ export async function getPropertyTypesList(): Promise<any[]> {
   return rows;
 }
 
-export async function getBuildingsList(propertyId?: number): Promise<any[]> {
+export async function getBuildingsList(
+  propertyId?: number
+): Promise<any[]> {
   let query = `
-    SELECT 
+    SELECT
       b.id,
-      b.property_id AS propertyId,
-      COALESCE(p.name, '') AS propertyName,
+      b.property_id AS "propertyId",
+      COALESCE(p.name, '') AS "propertyName",
       b.name,
-      b.property_type_id AS propertyTypeId,
-      COALESCE(pt.name, '') AS propertyTypeName,
-      b.total_floors AS totalFloors,
+      b.property_type_id AS "propertyTypeId",
+      COALESCE(pt.name, '') AS "propertyTypeName",
+      b.total_floors AS "totalFloors",
       b.description
     FROM buildings b
     LEFT JOIN properties p ON b.property_id = p.id
     LEFT JOIN property_types pt ON b.property_type_id = pt.id
   `;
-  const params: any[] = [];
-  if (propertyId) {
-    query += ` WHERE b.property_id = ?`;
+
+  const params: number[] = [];
+
+  if (propertyId !== undefined && propertyId !== null) {
+    query += ` WHERE b.property_id = $1`;
     params.push(propertyId);
   }
-  query += ` ORDER BY b.id DESC;`;
-  const [rows] = await pool.query<RowDataPacket[]>(query, params);
-  return rows;
+
+  query += ` ORDER BY b.id DESC`;
+
+  const result = await pool.query(query, params);
+
+  return result.rows;
 }
 
 export async function getBuildingById(id: number): Promise<any | null> {
@@ -55,7 +62,7 @@ export async function getBuildingById(id: number): Promise<any | null> {
     FROM buildings b
     LEFT JOIN properties p ON b.property_id = p.id
     LEFT JOIN property_types pt ON b.property_type_id = pt.id
-    WHERE b.id = ?;
+    WHERE b.id = $1;
   `;
   const [rows] = await pool.query<RowDataPacket[]>(query, [id]);
   if (!rows || rows.length === 0) {

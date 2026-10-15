@@ -199,10 +199,10 @@ export async function removeProperty(req: Request, res: Response) {
     });
   } catch (error: any) {
     if (
-      error &&
-      (error.code === "ER_ROW_IS_REFERENCED" ||
-        error.code === "ER_ROW_IS_REFERENCED_2" ||
-        error.errno === 1451)
+      error?.code === "23503" ||
+      error?.code === "ER_ROW_IS_REFERENCED" ||
+      error?.code === "ER_ROW_IS_REFERENCED_2" ||
+      error?.errno === 1451
     ) {
       return sendError(
         res,
@@ -210,6 +210,9 @@ export async function removeProperty(req: Request, res: Response) {
         "This property is in use. Cannot be deleted.",
       );
     }
+
+    console.error("REMOVE PROPERTY ERROR:", error);
+
     return sendError(
       res,
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
